@@ -21,6 +21,9 @@ from .serializers import (
 )
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+# Password editing in profile
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 
 # ==================== User Management ====================
@@ -369,3 +372,26 @@ class UserPublicSheetsView(generics.ListAPIView):
         username = self.kwargs.get('username')
         author = get_object_or_404(User, username=username)
         return MusicSheet.objects.filter(author=author).order_by('-published_date')
+    
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+
+        if not current_password or not new_password:
+            return Response({"error": "لطفاً هر دو فیلد را پر کنید."}, status=400)
+
+        if not user.check_password(current_password):
+            return Response({"error": "رمز عبور فعلی اشتباه است."}, status=400)
+
+        try:
+            validate_password(new_password, user)
+        except ValidationError as e:
+            return Response({"error": e.messages}, status=400)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "رمز عبور با موفقیت تغییر یافت."}, status=200)
