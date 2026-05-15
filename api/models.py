@@ -59,6 +59,14 @@ class Comment(models.Model):
     sheet = models.ForeignKey(MusicSheet, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    rating = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        choices=None
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def str(self):

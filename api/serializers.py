@@ -103,6 +103,14 @@ class CompleteRegistrationSerializer(serializers.Serializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source="author.username")
+    replies = serializers.SerializerMethodField()
+    rating = serializers.DecimalField(max_digits=2, decimal_places=1, required=False, allow_null=True)
+
     class Meta:
         model = Comment
-        fields = ['id', 'author', 'text', 'created_at']
+        fields = ['id', 'author', 'text', 'rating', 'parent', 'created_at', 'replies']
+
+    def get_replies(self, obj):
+        if obj.replies.exists():
+            return CommentSerializer(obj.replies.all().order_by('created_at'), many=True).data
+        return []

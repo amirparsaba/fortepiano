@@ -358,11 +358,23 @@ class CommentListCreate(generics.ListCreateAPIView):
 
     def get_queryset(self):
         sheet_id = self.kwargs['sheet_id']
-        return Comment.objects.filter(sheet_id=sheet_id).order_by('-created_at')
+         
+        return Comment.objects.filter(sheet_id=sheet_id, parent__isnull=True).order_by('-created_at')
 
     def perform_create(self, serializer):
         sheet = get_object_or_404(MusicSheet, pk=self.kwargs['sheet_id'])
-        serializer.save(author=self.request.user, sheet=sheet)
+        parent_id = self.request.data.get('parent')
+        rating = self.request.data.get('rating')
+        parent = None
+        if parent_id:
+            parent = get_object_or_404(Comment, pk=parent_id, sheet=sheet)
+            rating = None   
+        serializer.save(
+            author=self.request.user,
+            sheet=sheet,
+            parent=parent,
+            rating=rating
+        )
 
 class UserPublicSheetsView(generics.ListAPIView):
     serializer_class = MusicSheetSerializer
