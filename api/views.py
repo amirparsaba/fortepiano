@@ -26,7 +26,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 
-# ==================== User Management ====================
+# Users
 class UserListCreate(generics.ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -61,7 +61,7 @@ class UserList(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# ==================== File Upload ====================
+# File uploading
 class FileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [permissions.IsAuthenticated]
@@ -81,7 +81,7 @@ class FileUploadView(APIView):
         }, status=200)
 
 
-# ==================== User Profile ====================
+
 class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -91,7 +91,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-# ==================== User Sheets ====================
+
 class UserSheetsView(generics.ListAPIView):
     serializer_class = MusicSheetSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -100,7 +100,7 @@ class UserSheetsView(generics.ListAPIView):
         return MusicSheet.objects.filter(author=self.request.user).order_by('-published_date')
 
 
-# ==================== Authentication ====================
+
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -170,7 +170,7 @@ class LogoutView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ==================== Registration with OTP ====================
+
 class InitiateRegistrationView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -267,7 +267,7 @@ class CompleteRegistrationView(APIView):
         return Response({"message": "ثبت‌نام با موفقیت انجام شد. اکنون می‌توانید وارد شوید."}, status=201)
 
 
-# ==================== Music Sheet ====================
+
 class MusicSheetListCreate(generics.ListCreateAPIView):
     queryset = MusicSheet.objects.all().order_by('-published_date')
     serializer_class = MusicSheetSerializer
@@ -308,7 +308,7 @@ class MusicSheetRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-# ==================== PDF Pages ====================
+
 class SheetPageView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -351,7 +351,7 @@ class SheetPageCountView(APIView):
             return Response({"page_count": 0})
 
 
-# ==================== Comments ====================
+
 class CommentListCreate(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]

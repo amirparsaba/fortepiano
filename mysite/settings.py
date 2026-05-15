@@ -1,13 +1,17 @@
 from pathlib import Path
 from datetime import timedelta #adding real time
+from environs import Env 
+
+env = Env()
+env.read_env()
 
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure--30dqotx*_#+7k2_co*uov&g9(k-86al_@f(iam8nd!8t_#*w1'
+SECRET_KEY = env('SECRET_KEY')
 
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -66,9 +70,9 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fortepiano',
-        'USER': 'postgres',
-        'PASSWORD': 'parsa1389',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
@@ -147,7 +151,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'bqayyamyrparsa@gmail.com'
-EMAIL_HOST_PASSWORD = 'nbifwmbgclhhutpz'
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'your-email@gmail.com'
 
 # Swagger settings for testing api
