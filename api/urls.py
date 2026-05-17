@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (FileUploadView, InitiateRegistrationView, VerifyRegistrationView,
                     CompleteRegistrationView, MusicSheetListCreate, MusicSheetRetrieveUpdateDestroy,
                     SheetPageView, CommentListCreate, SheetPageCountView, UserSheetsView, UserPublicSheetsView,
-                    UserPublicSheetsView, UserList, ChangePasswordView)
+                    UserPublicSheetsView, UserList, ChangePasswordView, MidiConvertView)
 
 urlpatterns = [
     path("users/", views.UserListCreate.as_view(), name="user-view-create"),
@@ -30,4 +30,5 @@ urlpatterns = [
     path("users/<str:username>/sheets/", UserPublicSheetsView.as_view(), name="user-public-sheets"),
     path("users/search/", UserList.as_view(), name="user-search"),
     path("change-password/", ChangePasswordView.as_view(), name="change-password"),
+    path('convert-midi/', MidiConvertView.as_view(), name='convert-midi'),
 ]

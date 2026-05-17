@@ -12,6 +12,11 @@ from django.utils import timezone
 import fitz
 import random
 import string
+from music21 import converter
+import tempfile
+import os
+from django.http import FileResponse
+from rest_framework.permissions import AllowAny
 
 from .models import User, MusicSheet, Comment, PendingRegistration
 from .serializers import (
@@ -407,3 +412,49 @@ class ChangePasswordView(APIView):
         user.set_password(new_password)
         user.save()
         return Response({"message": "رمز عبور با موفقیت تغییر یافت."}, status=200)
+
+from music21 import converter
+import tempfile
+import os
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import AllowAny
+
+class MidiConvertView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        midi_file = request.FILES.get('midi_file')
+        if not midi_file:
+            return Response({"error": "فایل MIDI الزامی است."}, status=400)
+
+        with tempfile.NamedTemporaryFile(suffix='.mid', delete=False) as tmp:
+            for chunk in midi_file.chunks():
+                tmp.write(chunk)
+            midi_path = tmp.name
+
+        tmp_xml = None
+        try:
+            score = converter.parse(midi_path)
+            score.quantize(inPlace=True)
+            
+            tmp_xml = tempfile.NamedTemporaryFile(suffix='.xml', delete=False, mode='w', encoding='utf-8')
+            tmp_xml.close()
+            score.write('musicxml', fp=tmp_xml.name)
+            
+            with open(tmp_xml.name, 'r', encoding='utf-8') as f:
+                musicxml_str = f.read()
+
+            return Response({"musicxml": musicxml_str})
+
+        except Exception as e:
+            return Response({"error": f"خطا در تبدیل: {str(e)}"}, status=500)
+
+        finally:
+            if os.path.exists(midi_path):
+                os.unlink(midi_path)
+            if tmp_xml and os.path.exists(tmp_xml.name):
+                os.unlink(tmp_xml.name)
