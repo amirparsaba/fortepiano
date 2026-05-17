@@ -12,7 +12,6 @@ from django.utils import timezone
 import fitz
 import random
 import string
-from music21 import converter
 import tempfile
 import os
 from django.http import FileResponse
@@ -29,6 +28,7 @@ from drf_yasg import openapi
 # Password editing in profile
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied
 
 
 # Users
@@ -373,7 +373,8 @@ class CommentListCreate(generics.ListCreateAPIView):
         parent = None
         if parent_id:
             parent = get_object_or_404(Comment, pk=parent_id, sheet=sheet)
-            rating = None   
+            rating = None   # ریپلای امتیاز ندارد
+
         serializer.save(
             author=self.request.user,
             sheet=sheet,
@@ -413,48 +414,22 @@ class ChangePasswordView(APIView):
         user.save()
         return Response({"message": "رمز عبور با موفقیت تغییر یافت."}, status=200)
 
-from music21 import converter
-import tempfile
-import os
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import AllowAny
+class CommentUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class MidiConvertView(APIView):
-    parser_classes = [MultiPartParser, FormParser]
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    def get_queryset(self):
+        return Comment.objects.all()
 
-    def post(self, request):
-        midi_file = request.FILES.get('midi_file')
-        if not midi_file:
-            return Response({"error": "فایل MIDI الزامی است."}, status=400)
+    def perform_update(self, serializer):
+        # فقط نویسنده می‌تواند ویرایش کند
+        if self.get_object().author != self.request.user:
+            raise PermissionDenied("شما اجازه ویرایش این کامنت را ندارید.")
+        serializer.save()
 
-        with tempfile.NamedTemporaryFile(suffix='.mid', delete=False) as tmp:
-            for chunk in midi_file.chunks():
-                tmp.write(chunk)
-            midi_path = tmp.name
+    def perform_destroy(self, instance):
+        # فقط نویسنده می‌تواند حذف کند
+        if instance.author != self.request.user and not self.request.user.is_staff:
+            raise PermissionDenied("شما اجازه حذف این کامنت را ندارید.")
+        instance.delete()
 
-        tmp_xml = None
-        try:
-            score = converter.parse(midi_path)
-            score.quantize(inPlace=True)
-            
-            tmp_xml = tempfile.NamedTemporaryFile(suffix='.xml', delete=False, mode='w', encoding='utf-8')
-            tmp_xml.close()
-            score.write('musicxml', fp=tmp_xml.name)
-            
-            with open(tmp_xml.name, 'r', encoding='utf-8') as f:
-                musicxml_str = f.read()
-
-            return Response({"musicxml": musicxml_str})
-
-        except Exception as e:
-            return Response({"error": f"خطا در تبدیل: {str(e)}"}, status=500)
-
-        finally:
-            if os.path.exists(midi_path):
-                os.unlink(midi_path)
-            if tmp_xml and os.path.exists(tmp_xml.name):
-                os.unlink(tmp_xml.name)

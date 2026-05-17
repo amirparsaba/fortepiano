@@ -60,16 +60,11 @@ class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
-    rating = models.DecimalField(
-        max_digits=2,
-        decimal_places=1,
-        null=True,
-        blank=True,
-        choices=None
-    )
+    rating = models.DecimalField(max_digits=2, decimal_places=1, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)   # ← جدید
 
-    def str(self):
+    def __str__(self):
         return f"Comment by {self.author.username} on {self.sheet.title}"
 
 

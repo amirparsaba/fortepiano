@@ -103,14 +103,25 @@ class CompleteRegistrationSerializer(serializers.Serializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source="author.username")
+    author_id = serializers.ReadOnlyField(source="author.id")   # ← برای تشخیص نویسنده
     replies = serializers.SerializerMethodField()
     rating = serializers.DecimalField(max_digits=2, decimal_places=1, required=False, allow_null=True)
+    is_edited = serializers.SerializerMethodField()   # ← جدید
 
     class Meta:
         model = Comment
-        fields = ['id', 'author', 'text', 'rating', 'parent', 'created_at', 'replies']
+        fields = [
+            'id', 'author', 'author_id', 'text', 'rating',
+            'parent', 'created_at', 'updated_at', 'replies', 'is_edited'
+        ]
 
     def get_replies(self, obj):
         if obj.replies.exists():
             return CommentSerializer(obj.replies.all().order_by('created_at'), many=True).data
+
+
         return []
+
+    def get_is_edited(self, obj):
+    # اگر تفاوت بیشتر از ۱ ثانیه باشد، ویرایش شده محسوب می‌شود
+        return (obj.updated_at - obj.created_at).total_seconds() > 1
