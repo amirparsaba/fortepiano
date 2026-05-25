@@ -19,7 +19,7 @@ __pychace__/
 /httpRequests/
 .idea/
 .vscode/
-env/
+venv/
 media/
 mysite/__pycache__/
 .env
