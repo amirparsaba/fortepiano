@@ -18,8 +18,7 @@ __pychace__/
 /dataSources.local.xml
 /httpRequests/
 .idea/
-.vscode/
-venv/
+.venv/
 media/
 mysite/__pycache__/
 .env
